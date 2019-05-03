@@ -1,10 +1,14 @@
 
+
+import os
 import csv
 import time
 import requests
 
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError, ChunkedEncodingError
+
+PATH = '/Users/ahn.ch/Projects/Fantasy-Football-Analysis'
 
 class Scraper():
 
@@ -16,8 +20,8 @@ class Scraper():
         3) Categories: Fantasy football relevant only. No individual defensive stats. 
         """
         self.url        = 'https://www.pro-football-reference.com/'
-        self.years      = list(range(2006,2019))
-        self.categories = ['/passing.htm','/receiving.htm','/rushing.htm','/opp.htm']
+        self.years      = list(range(2018,2019))
+        self.categories = ['/passing.htm','/receiving.htm','/rushing.htm','/kicking.htm','/opp.htm','/returns.htm']
     
     def scrape_sites(self):
         obj  = {} #final object for list_to_csv
@@ -51,9 +55,16 @@ class Scraper():
         pass
     
     def list_to_csv(self,obj): #utilize in scrape_sites() on line 48 
-        pass
+        for cat in self.categories: 
+            key     = cat.replace('/','').replace('.htm','')
+            to_csv  = obj[key] #list object
+            headers = to_csv[0].keys()
+            with open('./csv/{}.csv'.format(key),'w') as f:
+                dict_writer = csv.DictWriter(f, headers)
+                dict_writer.writeheader()
+                dict_writer.writerows(to_csv)
 
-class Player()
+class Player():
     pass
 
 if __name__ == "__main__":
