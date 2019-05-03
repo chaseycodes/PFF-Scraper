@@ -21,29 +21,37 @@ class Scraper():
     
     def scrape_sites(self):
         #list container for scrape_player_profiles
-        href = []
+        obj = {}
         #iterate through instances
-        for year in self.years:
-            for cat in self.categories:
-                print(str(year)+': '+cat.replace('/','').replace('.htm','').upper())
+        for cat in self.categories:
+            data_list = []
+            key  = cat.replace('/','').replace('.htm','')
+            for year in self.years:
+                print(str(year)+': '+key)
                 url  = self.url+'years/'+str(year)+cat
                 res  = requests.get(url)
                 html = BeautifulSoup(res.content, 'html.parser')
                 if html:
-                    container  = html.find('div', {'id': 'content'})
-                    if cat == '/passing.htm':
-                        table = container.find('tbody')
-                        rows  = table.find_all('tr')
-                        for row in rows:
-                            data = {}
-                            for stat in row.find_all('td'):
-                                data[stat['data-stat']] = stat.get_text().strip()
-                            print(data)
+                    div   = html.find('div', {'id': 'content'})
+                    table = div.find('tbody')
+                    rows  = table.find_all('tr')
+                    for row in rows:
+                        data = {'year': year}
+                        for stat in row.find_all('td'):
+                            if stat:
+                                if stat['data-stat'] == 'player':
+                                    href = stat.find('a')['href']
+                                    print(href)
+                                else:
+                                    data[stat['data-stat']] = stat.get_text().strip()
+                        data_list.append(data)
+            obj[key] = data_list
 
-                    else:
-                        pass
     
     def scrape_player_profile(self,href):
+        pass
+    
+    def list_to_csv(self,data):
         pass
 
 
