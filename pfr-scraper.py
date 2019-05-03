@@ -20,12 +20,11 @@ class Scraper():
         self.categories = ['/passing.htm','/receiving.htm','/rushing.htm','/opp.htm']
     
     def scrape_sites(self):
-        #list container for scrape_player_profiles
-        obj = {}
-        #iterate through instances
-        for cat in self.categories:
-            data_list = []
-            key  = cat.replace('/','').replace('.htm','')
+        obj  = {} #final object for list_to_csv
+        href = [] #list container for scrape_player_profiles
+        for cat in self.categories: #iterate through instances
+            data_list = [] #pass category list into obj on line 23
+            key  = cat.replace('/','').replace('.htm','') #clean key
             for year in self.years:
                 print(str(year)+': '+key)
                 url  = self.url+'years/'+str(year)+cat
@@ -33,27 +32,29 @@ class Scraper():
                 html = BeautifulSoup(res.content, 'html.parser')
                 if html:
                     div   = html.find('div', {'id': 'content'})
-                    table = div.find('tbody')
+                    table = div.find('tbody') #search for table container
                     rows  = table.find_all('tr')
                     for row in rows:
                         data = {'year': year}
                         for stat in row.find_all('td'):
-                            if stat:
-                                if stat['data-stat'] == 'player':
-                                    href = stat.find('a')['href']
-                                    print(href)
+                            if stat: #avoid <thead>
+                                if stat['data-stat'] == 'player': #look for href
+                                    href = stat.find('a')['href'] #TODO ADD PLAYER SCRAPER
+                                    data[stat['data-stat']] = stat.get_text().strip()
                                 else:
                                     data[stat['data-stat']] = stat.get_text().strip()
-                        data_list.append(data)
-            obj[key] = data_list
-
+                        data_list.append(data) #add [year] into data_list on line 26
+            obj[key] = data_list #add every year as one key to obj on line 23
+        self.list_to_csv(obj)
     
     def scrape_player_profile(self,href):
         pass
     
-    def list_to_csv(self,data):
+    def list_to_csv(self,obj): #utilize in scrape_sites() on line 48 
         pass
 
+class Player()
+    pass
 
 if __name__ == "__main__":
     scraper = Scraper()
