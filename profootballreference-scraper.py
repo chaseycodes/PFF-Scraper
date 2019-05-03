@@ -20,7 +20,7 @@ class Scraper():
         3) Categories: Fantasy football relevant only. No individual defensive stats. 
         """
         self.url        = 'https://www.pro-football-reference.com'
-        self.years      = list(range(2017,2019))
+        self.years      = list(range(2016,2019))
         self.categories = ['/passing.htm','/receiving.htm','/rushing.htm','/kicking.htm','/opp.htm','/returns.htm']
     
     def scrape_sites(self):
@@ -101,8 +101,7 @@ class Player():
             'weight': None,
             'current_team': None,
             'birth_date': None,
-            'birth_place': None,
-            'death_date': None,
+            'birth_state': None,
             'college': None,
             'high_school': None,
             'draft_team': None,
@@ -115,22 +114,32 @@ class Player():
     def scrape_profile(self): #fill self.profile
         res = self.scraper.get_player_html(self.url) #extract html from Scraper class in line 75
         #profile information
-        profile_information = res.find('div', {'itemtype': 'https://schema.org/Person'})
-        self.profile['name'] = profile_information.find('h1').get_text()
+        profile_info = res.find('div', {'itemtype': 'https://schema.org/Person'})
+        profile_rows = profile_info.find_all('p')
+        self.profile['name']         = profile_info.find('h1').get_text()
         print(self.profile['name'])
         print(self.url)
-        profile_rows = profile_information.find_all('p')
-        position_row = profile_rows[1].get_text().replace('\n','').replace('\t','').replace('Throws','').replace(' ','').split(':')[1]
-        size_row     = profile_rows[2]
-        team_row     = profile_rows[3]
-        born_row     = profile_rows[4]
-        college_row  = profile_rows[5]
-        hs_row       = profile_rows[7]
-        try:
-            draft_row    = profile_rows[8]
-        except:
-            pass
-        print(position_row)
+        check = res.find('li', {'class': 'important special'})
+        if check:
+            print('HOF!')
+        else:
+            self.profile['position']     = profile_rows[1].get_text().replace('\n','').replace('\t','').replace('Throws','').replace(' ','').split(':')[1]
+            self.profile['height']       = profile_rows[2].find_all('span')[0].get_text()
+            self.profile['weight']       = profile_rows[2].find_all('span')[1].get_text()
+            self.profile['current_team'] = profile_rows[3].get_text().replace('Team: ','')
+            self.profile['birth_date']   = profile_rows[4].find_all('span')[0]['data-birth']
+            self.profile['birth_state']  = profile_rows[4].find_all('a')[1].get_text()
+            self.profile['college']      = profile_rows[5].find('a').get_text()
+            self.profile['high_school']  = profile_rows[7].find('a').get_text()
+            try:
+                draft_info = profile_rows[8].get_text().replace('in the ','$').replace(' round (','$').replace(')','$').split('$')
+                self.profile['draft_team']     = profile_rows[8].find_all('a')[0].get_text()
+                self.profile['draft_year']     = profile_rows[8].find_all('a')[1].get_text().replace(' NFL Draft','')
+                self.profile['draft_round']    = draft_info[1]
+                self.profile['draft_position'] = draft_info[2]
+                print(self.profile['draft_position'])
+            except:
+                pass
 
 
     def image_link():
