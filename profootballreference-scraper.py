@@ -47,10 +47,10 @@ class Scraper():
                                 if uri not in href: #check for dupes
                                     href.append(uri)
                                     player = Player(p_id,self.url+uri,self) #create player class
-                                    try: 
+                                    try:
                                         player.scrape_profile()
                                         p_id += 1
-                                    except: #TODO log errors
+                                    except ConnectionError: #TODO log errors
                                         print('Error: {}'.format(stat.get_text().strip().replace('*','')))
                                 data[stat['data-stat']] = stat.get_text().strip().replace('*','')
                             else:
@@ -109,13 +109,30 @@ class Player():
             'draft_round': None,
             'draft_position': None,
             'draft_year': None,
-            'current_salary': None,
             'hof_induction_year': None
         }
     
-    def scrape_profile(): #fill self.profile
+    def scrape_profile(self): #fill self.profile
         res = self.scraper.get_player_html(self.url) #extract html from Scraper class in line 75
-    
+        #profile information
+        profile_information = res.find('div', {'itemtype': 'https://schema.org/Person'})
+        self.profile['name'] = profile_information.find('h1').get_text()
+        print(self.profile['name'])
+        print(self.url)
+        profile_rows = profile_information.find_all('p')
+        position_row = profile_rows[1].get_text().replace('\n','').replace('\t','').replace('Throws','').replace(' ','').split(':')[1]
+        size_row     = profile_rows[2]
+        team_row     = profile_rows[3]
+        born_row     = profile_rows[4]
+        college_row  = profile_rows[5]
+        hs_row       = profile_rows[7]
+        try:
+            draft_row    = profile_rows[8]
+        except:
+            pass
+        print(position_row)
+
+
     def image_link():
         pass
         
