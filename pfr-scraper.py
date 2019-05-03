@@ -23,7 +23,7 @@ class Scraper():
         obj  = {} #final object for list_to_csv
         href = [] #list container for scrape_player_profiles
         for cat in self.categories: #iterate through instances
-            data_list = [] #pass category list into obj on line 23
+            data_list = [] #list container for total years per category
             key  = cat.replace('/','').replace('.htm','') #clean key
             for year in self.years:
                 print(str(year)+': '+key)
