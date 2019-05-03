@@ -32,8 +32,14 @@ class Scraper():
                 if html:
                     container  = html.find('div', {'id': 'content'})
                     if cat == '/passing.htm':
-                        table = container.find_all('tbody')
-                        print(table)
+                        table = container.find('tbody')
+                        rows  = table.find_all('tr')
+                        for row in rows:
+                            data = {}
+                            for stat in row.find_all('td'):
+                                data[stat['data-stat']] = stat.get_text().strip()
+                            print(data)
+
                     else:
                         pass
     
