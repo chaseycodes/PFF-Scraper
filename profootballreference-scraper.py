@@ -50,20 +50,20 @@ class Scraper():
                             pass
                         else:
                             data_list.append(data) #add {year} into data_list on line 26
-            obj[key] = data_list #add every year as one key to obj on line 23
+            obj[key.capitalize()] = data_list #add every year as one key to obj on line 23
         self.list_to_csv(obj)
 
     def list_to_csv(self,obj): #utilize in scrape_sites() on line 48 
         for cat in self.categories: 
-            key     = cat.replace('/','').replace('.htm','')
+            key     = cat.replace('/','').replace('.htm','').capitalize()
             to_csv  = obj[key] #list object
             headers = to_csv[0].keys()
-            with open('./csv/statistics/{}.csv'.format(key),'w') as f:
+            with open('./csv/statistics/NFL-Statistics-{}(06-18).csv'.format(key),'w') as f:
                 dict_writer = csv.DictWriter(f, headers)
                 dict_writer.writeheader()
                 dict_writer.writerows(to_csv)
     
-    def get_player_page_html(self,href)
+    def get_player_page_html(self,href):
         url  = self.url+href
         res  = requests.get(url)
         html = BeautifulSoup(res.content, 'html.parser')
