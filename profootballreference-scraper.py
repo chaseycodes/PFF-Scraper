@@ -20,7 +20,7 @@ class Scraper():
         3) Categories: Fantasy football relevant only. No individual defensive stats. 
         """
         self.url        = 'https://www.pro-football-reference.com/'
-        self.years      = list(range(2018,2019))
+        self.years      = list(range(2017,2019))
         self.categories = ['/passing.htm','/receiving.htm','/rushing.htm','/kicking.htm','/opp.htm','/returns.htm']
     
     def scrape_sites(self):
@@ -41,13 +41,15 @@ class Scraper():
                     for row in rows:
                         data = {'year': year}
                         for stat in row.find_all('td'):
-                            if stat: #avoid <thead>
-                                if stat['data-stat'] == 'player': #look for href
-                                    href = stat.find('a')['href'] #TODO ADD PLAYER SCRAPER
-                                    data[stat['data-stat']] = stat.get_text().strip()
-                                else:
-                                    data[stat['data-stat']] = stat.get_text().strip()
-                        data_list.append(data) #add [year] into data_list on line 26
+                            if stat['data-stat'] == 'player': #look for href
+                                href = stat.find('a')['href'] #TODO ADD PLAYER SCRAPER
+                                data[stat['data-stat']] = stat.get_text().strip().replace('*','')
+                            else:
+                                data[stat['data-stat']] = stat.get_text().strip()
+                        if len(data) == 1: #clean empty data from list
+                            pass
+                        else:
+                            data_list.append(data) #add [year] into data_list on line 26
             obj[key] = data_list #add every year as one key to obj on line 23
         self.list_to_csv(obj)
     
