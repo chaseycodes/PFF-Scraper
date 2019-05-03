@@ -26,6 +26,7 @@ class Scraper():
     def scrape_sites(self):
         obj  = {} #final object for list_to_csv
         href = [] #list container for scrape_player_profiles
+        p_id = 0 #player_id counter
         for cat in self.categories: #iterate through instances
             data_list = [] #list container for total years per category
             key  = cat.replace('/','').replace('.htm','') #clean key
@@ -42,7 +43,15 @@ class Scraper():
                         data = {'year': year}
                         for stat in row.find_all('td'):
                             if stat['data-stat'] == 'player': #look for href
-                                href = stat.find('a')['href'] #TODO ADD PLAYER SCRAPER make counter and checker
+                                uri = stat.find('a')['href'] #TODO ADD PLAYER SCRAPER make counter and checker
+                                if uri not in href: #check for dupes
+                                    href.append(uri)
+                                    player = Player(p_id,self.url+uri,self) #create player class
+                                    try: 
+                                        player.scrape_profile()
+                                        p_id += 1
+                                    except: #TODO log errors
+                                        print('Error: {}'.format(stat.get_text().strip().replace('*','')))
                                 data[stat['data-stat']] = stat.get_text().strip().replace('*','')
                             else:
                                 data[stat['data-stat']] = stat.get_text().strip()
@@ -63,8 +72,7 @@ class Scraper():
                 dict_writer.writeheader()
                 dict_writer.writerows(to_csv)
     
-    def get_player_page_html(self,href):
-        url  = self.url+href
+    def get_player_html(self,url):
         res  = requests.get(url)
         html = BeautifulSoup(res.content, 'html.parser')
         if html:
@@ -78,7 +86,9 @@ class Player():
         """
         Args:
         1) ID: Unique Identifier.
-        2) Href: Player link. 
+        2) URL: Player link. 
+        3) Scraper: Inherited Class
+        4) Profile: Data object containing player information
         """
         self.url        = url
         self.scraper    = scraper
@@ -103,8 +113,12 @@ class Player():
             'hof_induction_year': None
         }
     
-    def scrape_profile():
+    def scrape_profile(): #fill self.profile
+        res = self.scraper.get_player_html(self.url) #extract html from Scraper class in line 75
+    
+    def image_link():
         pass
+        
 
 if __name__ == "__main__":
     scraper = Scraper()
