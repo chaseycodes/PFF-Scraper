@@ -1,1 +1,2 @@
-, headers
+
+        #find HOF credits if present

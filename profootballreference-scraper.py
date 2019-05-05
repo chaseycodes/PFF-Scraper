@@ -168,7 +168,7 @@ class Player():
         
         #find high school name attribute
         if profile_rows[index_counter].contents[0].get_text() == 'High School':
-            self.profile['high_school'] = profile_rows[index_counter].contents[2].contents[0].encode('utf-8') + ', ' + profile_rows[index_counter].contents[4].contents[0].encode('utf-8')
+            self.profile['high_school'] = profile_rows[index_counter].contents[2].contents[0].encode('utf-8') + ', ' + profile_rows[index_counter].contents[4].contents[0].replace('"','').encode('utf-8')
             index_counter += 1
         
         #find draft attributes if present
@@ -196,13 +196,20 @@ class Player():
         with open('./csv/players/NFL-Player-Profiles(06-18).csv','a') as f:
             dict_writer = csv.DictWriter(f, headers)
             dict_writer.writerow(obj)
-    
-    def recorded_player_names(self):
-        df = pd.read_csv('./csv/players/NFL-Player-Profiles(06-18).csv')
 
     def image_link(self):
         pass
-        
+
+class CSV():
+
+    def __init__(self,scraper):
+        self.scraper     = scraper
+        self.player_path = './csv/players/NFL-Player-Profiles(06-18).csv'
+    
+    def load(self,attribute):
+        if attribute == 'player':
+            df = pd.read_csv(self.player_path)
+            return df
 
 if __name__ == "__main__":
     scraper = Scraper()
