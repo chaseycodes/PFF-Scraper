@@ -20,7 +20,7 @@ class Scraper():
         3) Categories: Fantasy football relevant only. No individual defensive stats. 
         """
         self.url        = 'https://www.pro-football-reference.com'
-        self.years      = list(range(2016,2019))
+        self.years      = list(range(2006,2019))
         self.categories = ['/passing.htm','/receiving.htm','/rushing.htm','/kicking.htm','/opp.htm','/returns.htm']
     
     def scrape_sites(self):
@@ -109,7 +109,7 @@ class Player():
             'draft_round': None,
             'draft_position': None,
             'draft_year': None,
-            'hof_induction_year': None
+            'hof_year': None
         }
     
     def scrape_profile(self): #fill self.profile
@@ -147,9 +147,9 @@ class Player():
         birth_info = profile_rows[index_counter].find('span', {'itemprop': 'birthDate'})
         if birth_info is not None:
             self.profile['birth_date'] = birth_info['data-birth']
-        birth_place_section = profile_rows[index_counter].find('span', {'itemprop': 'birthPlace'}).contents[1]
         try:
-            self.profile['birth_state'] = birth_place_section.get_text()
+            birth_place = profile_rows[index_counter].find('span', {'itemprop': 'birthPlace'}).contents[1]
+            self.profile['birth_state'] = birth_place.get_text()
         except IndexError:
             pass
         if birth_info is not None or len(birth_place_section) > 0:
@@ -164,23 +164,36 @@ class Player():
         #find college attribute
         if profile_rows[index_counter].contents[0].get_text() == 'College':
             self.profile['college'] = profile_rows[index_counter].contents[2].contents[0]
-            index_counter += 2
+            index_counter += 2 #skip AAV
         
+        #find high school name attribute
         if profile_rows[index_counter].contents[0].get_text() == 'High School':
             self.profile['high_school'] = profile_rows[index_counter].contents[2].get_text()
             index_counter += 1
         
         #find draft attributes if present
-        if profile_rows[index_counter].contents[0].get_text() == 'Draft':
-            self.profile['draft_team']     = profile_rows[index_counter].contents[2].get_text()
-            self.profile['draft_year']     = profile_rows[index_counter].contents[4].get_text().split(' ')[0]
-            self.profile['draft_round']    = profile_rows[index_counter].contents[3].split(' ')[3]
-            print(self.profile['draft_round'])
-            # self.profile['draft_position'] = draft_info[2]
-            # print(self.profile['draft_position'])
+        try:
+            if profile_rows[index_counter].contents[0].get_text() == 'Draft':
+                self.profile['draft_team']     = profile_rows[index_counter].contents[2].get_text()
+                self.profile['draft_year']     = profile_rows[index_counter].contents[4].get_text().split(' ')[0]
+                self.profile['draft_round']    = profile_rows[index_counter].contents[3].split(' ')[3]
+                self.profile['draft_position'] = profile_rows[index_counter].contents[3].split(' ')[5]
+                index_counter += 1
+        except IndexError:
+            pass
+        
+        #find HOF credits if present
+        try:
+            if profile_rows[index_counter].contents[0].contents[0] == 'Hall of Fame':
+                print(self.url)
+                print('hof!')
+        except IndexError:
+            pass
 
+    def create_player_profile(self,profile):
+        pass
 
-    def image_link():
+    def image_link(self):
         pass
         
 
