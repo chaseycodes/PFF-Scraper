@@ -4,6 +4,7 @@ import os
 import csv
 import time
 import requests
+import pandas as pd
 
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError, ChunkedEncodingError
@@ -43,7 +44,7 @@ class Scraper():
                         data = {'year': year}
                         for stat in row.find_all('td'):
                             if stat['data-stat'] == 'player': #look for href
-                                uri = stat.find('a')['href'] #TODO ADD PLAYER SCRAPER make counter and checker
+                                uri = stat.find('a')['href']
                                 if uri not in href: #check for dupes
                                     href.append(uri)
                                     player = Player(p_id,self.url+uri,self) #create player class
@@ -90,9 +91,9 @@ class Player():
         3) Scraper: Inherited Class
         4) Profile: Data object containing player information
         """
+        self.player_id  = player_id
         self.url        = url
         self.scraper    = scraper
-        self.player_id  = player_id
         self.profile    = {
             'player_id': player_id,
             'name': None,
@@ -120,20 +121,19 @@ class Player():
         index_counter = 1 #profile_rows index counter
 
         #find name attribute
-        self.profile['name'] = profile_info.find('h1').get_text()
+        self.profile['name'] = profile_info.find('h1').get_text().encode('utf-8')
 
         #find position attribute
-        if profile_rows[index_counter] is not None:
-            self.profile['position'] = profile_rows[index_counter].contents[2].split('\n')[0].split(' ')[1]
-            index_counter += 1
+        self.profile['position'] = profile_rows[index_counter].contents[2].split('\n')[0].split(' ')[1].encode('utf-8')
+        index_counter += 1
 
         #find height and weight attributes
         height = profile_rows[index_counter].find('span', {'itemprop': 'height'})
         if height is not None:
-            self.profile['height'] = height.contents[0]
+            self.profile['height'] = height.contents[0].encode('utf-8')
         weight = profile_rows[index_counter].find('span', {'itemprop': 'weight'})
         if weight is not None:
-            self.profile['weight'] = weight.contents[0].replace('lb','')
+            self.profile['weight'] = weight.contents[0].replace('lb','').encode('utf-8')
         if height is not None or weight is not None:
             index_counter += 1
 
@@ -146,10 +146,10 @@ class Player():
         #find birth date and state attributes
         birth_info = profile_rows[index_counter].find('span', {'itemprop': 'birthDate'})
         if birth_info is not None:
-            self.profile['birth_date'] = birth_info['data-birth']
+            self.profile['birth_date'] = birth_info['data-birth'].encode('utf-8')
         try:
             birth_place = profile_rows[index_counter].find('span', {'itemprop': 'birthPlace'}).contents[1]
-            self.profile['birth_state'] = birth_place.get_text()
+            self.profile['birth_state'] = birth_place.get_text().encode('utf-8')
         except IndexError:
             pass
         if birth_info is not None or len(birth_place_section) > 0:
@@ -158,26 +158,26 @@ class Player():
         #find death_date attribute if present
         death_section = profile_rows[index_counter].find('span', {'itemprop': 'deathDate'})
         if death_section is not None:
-            self.profile['death_date'] = death_section['data-death']
+            self.profile['death_date'] = death_section['data-death'].encode('utf-8')
             index_counter += 1
         
         #find college attribute
         if profile_rows[index_counter].contents[0].get_text() == 'College':
-            self.profile['college'] = profile_rows[index_counter].contents[2].contents[0]
+            self.profile['college'] = profile_rows[index_counter].contents[2].contents[0].encode('utf-8')
             index_counter += 2 #skip AAV
         
         #find high school name attribute
         if profile_rows[index_counter].contents[0].get_text() == 'High School':
-            self.profile['high_school'] = profile_rows[index_counter].contents[2].get_text()
+            self.profile['high_school'] = profile_rows[index_counter].contents[2].contents[0].encode('utf-8') + ', ' + profile_rows[index_counter].contents[4].contents[0].encode('utf-8')
             index_counter += 1
         
         #find draft attributes if present
         try:
             if profile_rows[index_counter].contents[0].get_text() == 'Draft':
-                self.profile['draft_team']     = profile_rows[index_counter].contents[2].get_text()
-                self.profile['draft_year']     = profile_rows[index_counter].contents[4].get_text().split(' ')[0]
-                self.profile['draft_round']    = profile_rows[index_counter].contents[3].split(' ')[3]
-                self.profile['draft_position'] = profile_rows[index_counter].contents[3].split(' ')[5]
+                self.profile['draft_team']     = profile_rows[index_counter].contents[2].get_text().encode('utf-8')
+                self.profile['draft_year']     = profile_rows[index_counter].contents[4].get_text().split(' ')[0].encode('utf-8')
+                self.profile['draft_round']    = profile_rows[index_counter].contents[3].split(' ')[3].encode('utf-8')
+                self.profile['draft_position'] = profile_rows[index_counter].contents[3].split(' ')[5].replace('(','').encode('utf-8')
                 index_counter += 1
         except IndexError:
             pass
@@ -185,13 +185,20 @@ class Player():
         #find HOF credits if present
         try:
             if profile_rows[index_counter].contents[0].contents[0] == 'Hall of Fame':
-                print(self.url)
-                print('hof!')
+                self.profile['hof_year'] = profile_rows[index_counter].contents[2].contents[0].encode('utf-8')
         except IndexError:
             pass
 
-    def create_player_profile(self,profile):
-        pass
+        self.create_player_profile(self.profile)
+
+    def create_player_profile(self,obj):
+        headers = obj.keys()
+        with open('./csv/players/NFL-Player-Profiles(06-18).csv','a') as f:
+            dict_writer = csv.DictWriter(f, headers)
+            dict_writer.writerow(obj)
+    
+    def recorded_player_names(self):
+        df = pd.read_csv('./csv/players/NFL-Player-Profiles(06-18).csv')
 
     def image_link(self):
         pass
