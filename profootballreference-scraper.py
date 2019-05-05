@@ -103,6 +103,7 @@ class Player():
             'birth_date': None,
             'birth_state': None,
             'college': None,
+            'death_date': None,
             'high_school': None,
             'draft_team': None,
             'draft_round': None,
@@ -120,13 +121,10 @@ class Player():
 
         #find name attribute
         self.profile['name'] = profile_info.find('h1').get_text()
-        # check = res.find('li', {'class': 'important special'})
-        # if check:
-        #     print('HOF!')
 
         #find position attribute
         if profile_rows[index_counter] is not None:
-            self.profile['position'] = profile_rows[index_counter].get_text().replace('\n','').replace('\t','').replace('Throws','').replace(' ','').split(':')[1]
+            self.profile['position'] = profile_rows[index_counter].contents[2].split('\n')[0].split(' ')[1]
             index_counter += 1
 
         #find height and weight attributes
@@ -138,21 +136,48 @@ class Player():
             self.profile['weight'] = weight.contents[0].replace('lb','')
         if height is not None or weight is not None:
             index_counter += 1
+
+        #find current team attribute
+        affiliation = profile_rows[index_counter].find('span', {'itemprop': 'affiliation'})
+        if affiliation is not None:
+            self.profile['current_team'] = profile_rows[index_counter].contents[2].get_text()
+            index_counter += 1
         
-        self.profile['current_team'] = profile_rows[3].get_text().replace('Team: ','')
-        self.profile['birth_date']   = profile_rows[4].find_all('span')[0]['data-birth']
-        self.profile['birth_state']  = profile_rows[4].find_all('a')[1].get_text()
-        self.profile['college']      = profile_rows[5].find('a').get_text()
-        self.profile['high_school']  = profile_rows[7].find('a').get_text()
+        #find birth date and state attributes
+        birth_info = profile_rows[index_counter].find('span', {'itemprop': 'birthDate'})
+        if birth_info is not None:
+            self.profile['birth_date'] = birth_info['data-birth']
+        birth_place_section = profile_rows[index_counter].find('span', {'itemprop': 'birthPlace'}).contents[1]
         try:
-            draft_info = profile_rows[8].get_text().replace('in the ','$').replace(' round (','$').replace(')','$').split('$')
-            self.profile['draft_team']     = profile_rows[8].find_all('a')[0].get_text()
-            self.profile['draft_year']     = profile_rows[8].find_all('a')[1].get_text().replace(' NFL Draft','')
-            self.profile['draft_round']    = draft_info[1]
-            self.profile['draft_position'] = draft_info[2]
-            print(self.profile['draft_position'])
-        except:
+            self.profile['birth_state'] = birth_place_section.get_text()
+        except IndexError:
             pass
+        if birth_info is not None or len(birth_place_section) > 0:
+            index_counter += 1
+        
+        #find death_date attribute if present
+        death_section = profile_rows[index_counter].find('span', {'itemprop': 'deathDate'})
+        if death_section is not None:
+            self.profile['death_date'] = death_section['data-death']
+            index_counter += 1
+        
+        #find college attribute
+        if profile_rows[index_counter].contents[0].get_text() == 'College':
+            self.profile['college'] = profile_rows[index_counter].contents[2].contents[0]
+            index_counter += 2
+        
+        if profile_rows[index_counter].contents[0].get_text() == 'High School':
+            self.profile['high_school'] = profile_rows[index_counter].contents[2].get_text()
+            index_counter += 1
+        
+        #find draft attributes if present
+        if profile_rows[index_counter].contents[0].get_text() == 'Draft':
+            self.profile['draft_team']     = profile_rows[index_counter].contents[2].get_text()
+            self.profile['draft_year']     = profile_rows[index_counter].contents[4].get_text().split(' ')[0]
+            self.profile['draft_round']    = profile_rows[index_counter].contents[3].split(' ')[3]
+            print(self.profile['draft_round'])
+            # self.profile['draft_position'] = draft_info[2]
+            # print(self.profile['draft_position'])
 
 
     def image_link():
