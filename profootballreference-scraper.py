@@ -93,7 +93,7 @@ class Player():
         self.url        = url
         self.scraper    = scraper
         self.player_id  = player_id
-        self.profile = {
+        self.profile    = {
             'player_id': player_id,
             'name': None,
             'position': None,
@@ -116,17 +116,29 @@ class Player():
         #profile information
         profile_info  = res.find('div', {'itemtype': 'https://schema.org/Person'})
         profile_rows  = profile_info.find_all('p')
-        index_counter = 1
-        #set name
+        index_counter = 1 #profile_rows index counter
+
+        #find name attribute
         self.profile['name'] = profile_info.find('h1').get_text()
         # check = res.find('li', {'class': 'important special'})
         # if check:
         #     print('HOF!')
+
+        #find position attribute
         if profile_rows[index_counter] is not None:
             self.profile['position'] = profile_rows[index_counter].get_text().replace('\n','').replace('\t','').replace('Throws','').replace(' ','').split(':')[1]
             index_counter += 1
-        self.profile['height']       = profile_rows[2].find_all('span')[0].get_text()
-        self.profile['weight']       = profile_rows[2].find_all('span')[1].get_text()
+
+        #find height and weight attributes
+        height = profile_rows[index_counter].find('span', {'itemprop': 'height'})
+        if height is not None:
+            self.profile['height'] = height.contents[0]
+        weight = profile_rows[index_counter].find('span', {'itemprop': 'weight'})
+        if weight is not None:
+            self.profile['weight'] = weight.contents[0].replace('lb','')
+        if height is not None or weight is not None:
+            index_counter += 1
+        
         self.profile['current_team'] = profile_rows[3].get_text().replace('Team: ','')
         self.profile['birth_date']   = profile_rows[4].find_all('span')[0]['data-birth']
         self.profile['birth_state']  = profile_rows[4].find_all('a')[1].get_text()
