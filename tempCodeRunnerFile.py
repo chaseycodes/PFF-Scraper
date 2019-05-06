@@ -1,2 +1,1 @@
-
-        #find HOF credits if present
+profile_rows[index_counter]

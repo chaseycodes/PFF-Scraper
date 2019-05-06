@@ -21,8 +21,8 @@ class Scraper():
         3) Categories: Fantasy football relevant only. No individual defensive stats. 
         """
         self.url        = 'https://www.pro-football-reference.com'
-        self.years      = list(range(2006,2019))
-        self.categories = ['/passing.htm','/receiving.htm','/rushing.htm','/kicking.htm','/opp.htm','/returns.htm']
+        self.years      = list(range(2018,2019))
+        self.categories = ['/returns.htm','/passing.htm','/receiving.htm','/rushing.htm','/kicking.htm','/opp.htm']
     
     def scrape_sites(self):
         obj  = {} #final object for list_to_csv
@@ -124,8 +124,14 @@ class Player():
         self.profile['name'] = profile_info.find('h1').get_text().encode('utf-8')
 
         #find position attribute
-        self.profile['position'] = profile_rows[index_counter].contents[2].split('\n')[0].split(' ')[1].encode('utf-8')
-        index_counter += 1
+        if profile_rows[index_counter].contents == [u'\n']:
+            index_counter += 2 #if no position
+        else:
+            try:
+                self.profile['position'] = profile_rows[index_counter].contents[2].split('\n')[0].split(' ')[1]
+                index_counter += 1
+            except:
+                pass
 
         #find height and weight attributes
         height = profile_rows[index_counter].find('span', {'itemprop': 'height'})
@@ -148,11 +154,12 @@ class Player():
         if birth_info is not None:
             self.profile['birth_date'] = birth_info['data-birth'].encode('utf-8')
         try:
-            birth_place = profile_rows[index_counter].find('span', {'itemprop': 'birthPlace'}).contents[1]
-            self.profile['birth_state'] = birth_place.get_text().encode('utf-8')
+            birth_place = profile_rows[index_counter].find('span', {'itemprop': 'birthPlace'})
+            if birth_place is not None:
+                self.profile['birth_state'] = birth_place.contents[1].get_text().encode('utf-8')
         except IndexError:
             pass
-        if birth_info is not None or len(birth_place_section) > 0:
+        if birth_info is not None or len(birth_place) > 0:
             index_counter += 1
         
         #find death_date attribute if present
@@ -167,9 +174,12 @@ class Player():
             index_counter += 2 #skip AAV
         
         #find high school name attribute
-        if profile_rows[index_counter].contents[0].get_text() == 'High School':
-            self.profile['high_school'] = profile_rows[index_counter].contents[2].contents[0].encode('utf-8') + ', ' + profile_rows[index_counter].contents[4].contents[0].replace('"','').encode('utf-8')
-            index_counter += 1
+        try:
+            if profile_rows[index_counter].contents[0].get_text() == 'High School':
+                self.profile['high_school'] = profile_rows[index_counter].contents[2].contents[0].encode('utf-8') + ', ' + profile_rows[index_counter].contents[4].contents[0].replace('"','').encode('utf-8')
+                index_counter += 1
+        except IndexError:
+            pass
         
         #find draft attributes if present
         try:
