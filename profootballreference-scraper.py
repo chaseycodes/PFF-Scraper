@@ -21,15 +21,14 @@ class Scraper():
         3) Categories: Fantasy football relevant only. No individual defensive stats. 
         """
         self.url        = 'https://www.pro-football-reference.com'
-        self.years      = list(range(2018,2019))
+        self.years      = list(range(2006,2019))
         self.categories = ['/returns.htm','/passing.htm','/receiving.htm','/rushing.htm','/kicking.htm','/opp.htm']
     
     def scrape_sites(self):
-        obj  = {} #final object for list_to_csv
+        obj  = [] #final object for list_to_csv
         href = [] #list container for scrape_player_profiles
         p_id = 0 #player_id counter
         for cat in self.categories: #iterate through instances
-            data_list = [] #list container for total years per category
             key  = cat.replace('/','').replace('.htm','') #clean key
             for year in self.years:
                 print(str(year)+': '+key)
@@ -41,7 +40,7 @@ class Scraper():
                     table = div.find('tbody') #search for table container
                     rows  = table.find_all('tr')
                     for row in rows:
-                        data = {'year': year}
+                        data = {'year': year, 'stat_type': key}
                         for stat in row.find_all('td'):
                             if stat['data-stat'] == 'player': #look for href
                                 uri = stat.find('a')['href']
@@ -59,19 +58,15 @@ class Scraper():
                         if len(data) == 1: #clean empty data from list
                             pass
                         else:
-                            data_list.append(data) #add {year} into data_list on line 26
-            obj[key.capitalize()] = data_list #add every year as one key to obj on line 23
+                            obj.append(data) #add {year} into data_list on line 26
         self.list_to_csv(obj)
 
     def list_to_csv(self,obj): #utilize in scrape_sites() on line 48 
-        for cat in self.categories: 
-            key     = cat.replace('/','').replace('.htm','').capitalize()
-            to_csv  = obj[key] #list object
-            headers = to_csv[0].keys()
-            with open('./csv/statistics/NFL-Statistics-{}(06-18).csv'.format(key),'w') as f:
-                dict_writer = csv.DictWriter(f, headers)
-                dict_writer.writeheader()
-                dict_writer.writerows(to_csv)
+        headers = obj[0].keys()
+        with open('./csv/statistics/NFL-Statistics(06-18).csv','w') as f:
+            dict_writer = csv.DictWriter(f, headers)
+            dict_writer.writeheader()
+            dict_writer.writerows(obj)
     
     def get_player_html(self,url):
         res  = requests.get(url)
