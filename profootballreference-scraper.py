@@ -125,7 +125,7 @@ class Player():
 
         #find position attribute
         if profile_rows[index_counter].contents == [u'\n']:
-            index_counter += 2 #if no position
+            index_counter += 2 #if no position skip 2 rows
         else:
             try:
                 self.profile['position'] = profile_rows[index_counter].contents[2].split('\n')[0].split(' ')[1]
