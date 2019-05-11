@@ -73,6 +73,9 @@ class Scraper():
                 dict_writer.writeheader()
                 dict_writer.writerows(to_csv)
     
+    def merge_csv(self):
+        pass
+    
     def get_player_html(self,url):
         res  = requests.get(url)
         html = BeautifulSoup(res.content, 'html.parser')
