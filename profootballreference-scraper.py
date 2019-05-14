@@ -224,6 +224,9 @@ class CSV():
             df = pd.read_csv(self.player_path)
             return df
 
+    def player_search(self):
+        pass
+
 if __name__ == "__main__":
     scraper = Scraper()
     scraper.scrape_sites()
