@@ -226,6 +226,9 @@ class CSV():
 
     def player_search(self):
         pass
+    
+    def type(self):
+        pass
 
 if __name__ == "__main__":
     scraper = Scraper()
